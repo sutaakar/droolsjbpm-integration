@@ -1218,9 +1218,11 @@ public class RuntimeDataServiceIntegrationTest extends JbpmKieServerBaseIntegrat
                     if (variable.getOldValue() == null) {
                         System.out.println("****" + variable);
                         System.out.println("Retrying");
-                        List<VariableInstance> currentState2 = queryClient.findVariablesCurrentState(processInstanceId);
-                        for (VariableInstance variable2 : currentState2) {
-                            System.out.println("------" + variable2);
+                        for(int i=0; i<10; i++) {
+                            List<VariableInstance> currentState2 = queryClient.findVariablesCurrentState(processInstanceId);
+                            for (VariableInstance variable2 : currentState2) {
+                                System.out.println("------" + variable2);
+                            }
                         }
                     }
                     assertEquals("waiting for signal", variable.getOldValue());
