@@ -382,6 +382,22 @@
         <kieserver.casemgmt.enabled>true</kieserver.casemgmt.enabled>
         <jbpm.executor.disabled>true</jbpm.executor.disabled>
       </properties>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-failsafe-plugin</artifactId>
+              <configuration>
+                <excludes>
+                  <exclude>**/DecisionTasksIntegrationTest.java</exclude>
+                  <exclude>**/RuleRelatedProcessIntegrationTest.java</exclude>
+                </excludes>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
     </profile>
   </profiles>
 </project>
