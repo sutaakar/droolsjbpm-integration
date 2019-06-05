@@ -24,13 +24,17 @@ import java.util.ServiceLoader;
 import org.apache.commons.lang3.StringUtils;
 import org.dashbuilder.dataset.def.DataSetDefRegistry;
 import org.jbpm.casemgmt.api.model.CaseStatus;
+import org.jbpm.executor.AsynchronousJobListener;
 import org.jbpm.executor.impl.ExecutorServiceImpl;
 import org.jbpm.kie.services.impl.KModuleDeploymentService;
 import org.jbpm.kie.services.impl.query.QueryServiceImpl;
 import org.jbpm.process.instance.ProcessInstance;
+import org.jbpm.services.api.DeploymentEventListener;
 import org.jbpm.services.api.RuntimeDataService;
 import org.jbpm.services.api.model.ProcessInstanceDesc;
+import org.kie.api.event.rule.AgendaEventListener;
 import org.kie.api.runtime.query.QueryContext;
+import org.kie.dmn.api.core.event.DMNRuntimeEventListener;
 import org.kie.server.api.KieServerConstants;
 import org.kie.server.api.model.Message;
 import org.kie.server.api.model.Severity;
@@ -45,6 +49,7 @@ import org.kie.server.services.casemgmt.CaseKieServerExtension;
 import org.kie.server.services.casemgmt.CaseManagementRuntimeDataServiceBase;
 import org.kie.server.services.impl.KieServerImpl;
 import org.kie.server.services.jbpm.JbpmKieServerExtension;
+import org.optaplanner.core.impl.phase.event.PhaseLifecycleListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +68,7 @@ public class PrometheusKieServerExtension implements KieServerExtension {
     
     private KieServerRegistry context;
     private boolean initialized = false;
+    private PrometheusCustomMetricsSupport customMetrics;
 
     public static PrometheusMetrics getMetrics() {
         if (METRICS == null) {
@@ -85,6 +91,7 @@ public class PrometheusKieServerExtension implements KieServerExtension {
     public void init(KieServerImpl kieServer, KieServerRegistry registry) {
         this.context = registry;
 
+        customMetrics = new PrometheusCustomMetricsSupport();
         registerDefaultDescriptor();
 
         //Prometheus Monitoring
@@ -93,12 +100,28 @@ public class PrometheusKieServerExtension implements KieServerExtension {
 
             final KModuleDeploymentService deploymentService = jBPMExtension.getAppComponents(KModuleDeploymentService.class);
             if (deploymentService != null) {
-                deploymentService.addListener(new PrometheusDeploymentEventListener());
+                PrometheusDeploymentEventListener defaultListener = new PrometheusDeploymentEventListener();
+                List<DeploymentEventListener> metrics = customMetrics.getDeploymentEventListener();
+                if (!metrics.isEmpty()) {
+                    List<DeploymentEventListener> listeners = new ArrayList<>(metrics);
+                    listeners.add(defaultListener);
+                    listeners.forEach(l -> deploymentService.addListener(l));
+                } else {
+                    deploymentService.addListener(defaultListener);
+                }
             }
 
             final ExecutorServiceImpl executorService = jBPMExtension.getAppComponents(ExecutorServiceImpl.class);
             if (executorService != null) {
-                executorService.addAsyncJobListener(new PrometheusJobListener());
+                PrometheusJobListener defaultListener = new PrometheusJobListener();
+                List<AsynchronousJobListener> metrics = customMetrics.getAsynchronousJobListener();
+                if (!metrics.isEmpty()) {
+                    List<AsynchronousJobListener> listeners = new ArrayList<>(metrics);
+                    listeners.add(defaultListener);
+                    listeners.forEach(l -> executorService.addAsyncJobListener(l));
+                } else {
+                    executorService.addAsyncJobListener(defaultListener);
+                }
             }
 
             final QueryServiceImpl queryService = jBPMExtension.getAppComponents(QueryServiceImpl.class);
@@ -129,7 +152,51 @@ public class PrometheusKieServerExtension implements KieServerExtension {
         }
 
         initialized = true;
-        LOGGER.info("{} started", toString());
+        if (!customMetrics.hasCustomMetrics()) {
+            LOGGER.info("{} started", toString());
+        } else {
+            LOGGER.info( toString() + " started with custom Prometheus metrics provider(s): " + customMetrics.customMetricsProviders());
+        }
+
+    }
+
+    public List<DMNRuntimeEventListener> getDMNRuntimeListeners(KieContainerInstance kContainer) {
+        PrometheusMetricsDMNListener defaultListener = new PrometheusMetricsDMNListener(getMetrics(), kContainer);
+        List<DMNRuntimeEventListener> metrics = customMetrics.getDMNRuntimeEventListener(kContainer);
+        if (!metrics.isEmpty()) {
+            List<DMNRuntimeEventListener> listeners = new ArrayList<>(metrics);
+            listeners.add(defaultListener);
+            return listeners;
+        } else {
+            return Collections.singletonList(defaultListener);
+        }
+    }
+
+    public List<AgendaEventListener> getDroolsListeners(String kieSessionId, KieContainerInstance kieContainer) {
+        PrometheusMetricsDroolsListener defaultListener = new PrometheusMetricsDroolsListener(getMetrics(),
+                                                                                              kieSessionId,
+                                                                                              kieContainer);
+        List<AgendaEventListener> metrics = customMetrics.getAgendaEventListener(kieSessionId, kieContainer);
+        if (!metrics.isEmpty()) {
+            List<AgendaEventListener> listeners = new ArrayList<>(metrics);
+            listeners.add(defaultListener);
+            return listeners;
+        } else {
+            return Collections.singletonList(defaultListener);
+        }
+    }
+
+    public List<PhaseLifecycleListener> getOptaPlannerListeners(String solverId) {
+        PrometheusMetricsSolverListener defaultListener = new PrometheusMetricsSolverListener(solverId);
+
+        List<PhaseLifecycleListener> metrics = customMetrics.getPhaseLifecycleListener(solverId);
+        if (!metrics.isEmpty()) {
+            List<PhaseLifecycleListener> listeners = new ArrayList<>(metrics);
+            listeners.add(defaultListener);
+            return listeners;
+        } else {
+            return Collections.singletonList(defaultListener);
+        }
     }
 
     protected void registerDefaultDescriptor() {

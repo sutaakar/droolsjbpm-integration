@@ -44,14 +44,11 @@ import org.kie.server.api.model.dmn.DMNModelInfoList;
 import org.kie.server.api.model.dmn.DMNQNameInfo;
 import org.kie.server.api.model.dmn.DMNResultKS;
 import org.kie.server.api.model.dmn.DMNUnaryTestsInfo;
-import org.kie.server.services.api.KieServerExtension;
 import org.kie.server.services.api.KieServerRegistry;
 import org.kie.server.services.impl.KieContainerInstanceImpl;
 import org.kie.server.services.impl.locator.ContainerLocatorProvider;
 import org.kie.server.services.impl.marshal.MarshallerHelper;
 import org.kie.server.services.prometheus.PrometheusKieServerExtension;
-import org.kie.server.services.prometheus.PrometheusMetrics;
-import org.kie.server.services.prometheus.PrometheusMetricsDMNListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,11 +159,9 @@ public class ModelEvaluatorServiceBase {
             KieSession kieSession = kContainer.getKieContainer().newKieSession();
             DMNRuntime dmnRuntime = kieSession.getKieRuntime(DMNRuntime.class);
 
-            KieServerExtension extension = context.getServerExtension(PrometheusKieServerExtension.EXTENSION_NAME);
+            PrometheusKieServerExtension extension = (PrometheusKieServerExtension)context.getServerExtension(PrometheusKieServerExtension.EXTENSION_NAME);
             if (extension != null) {
-                PrometheusMetrics dmnMetrics = PrometheusKieServerExtension.getMetrics();
-                PrometheusMetricsDMNListener listener = new PrometheusMetricsDMNListener(dmnMetrics, kContainer);
-                dmnRuntime.addListener(listener);
+                extension.getDMNRuntimeListeners(kContainer).forEach(l -> dmnRuntime.addListener(l));
             }
 
             LOG.debug("Will deserialize payload: {}", contextPayload);

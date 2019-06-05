@@ -32,10 +32,10 @@ import org.kie.server.services.api.KieServerExtension;
 import org.kie.server.services.api.KieServerRegistry;
 import org.kie.server.services.impl.KieContainerInstanceImpl;
 import org.kie.server.services.prometheus.PrometheusKieServerExtension;
-import org.kie.server.services.prometheus.PrometheusMetricsSolverListener;
 import org.optaplanner.core.api.score.Score;
 import org.optaplanner.core.api.solver.Solver;
 import org.optaplanner.core.api.solver.SolverFactory;
+import org.optaplanner.core.impl.phase.event.PhaseLifecycleListener;
 import org.optaplanner.core.impl.solver.AbstractSolver;
 import org.optaplanner.core.impl.solver.ProblemFactChange;
 import org.slf4j.Logger;
@@ -511,9 +511,9 @@ public class SolverServiceBase {
     }
 
     private void registerListener(Solver solver, String solverId) {
-        KieServerExtension extension = context.getServerExtension(PrometheusKieServerExtension.EXTENSION_NAME);
+        PrometheusKieServerExtension extension = (PrometheusKieServerExtension)context.getServerExtension(PrometheusKieServerExtension.EXTENSION_NAME);
         if (extension != null) {
-            ((AbstractSolver) solver).addPhaseLifecycleListener(new PrometheusMetricsSolverListener(solverId));
+            extension.getOptaPlannerListeners(solverId).forEach(l -> ((AbstractSolver) solver).addPhaseLifecycleListener(l));
         }
     }
 
