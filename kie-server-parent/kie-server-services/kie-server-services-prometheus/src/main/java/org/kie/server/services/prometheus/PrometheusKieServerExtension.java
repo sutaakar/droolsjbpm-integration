@@ -91,7 +91,7 @@ public class PrometheusKieServerExtension implements KieServerExtension {
     public void init(KieServerImpl kieServer, KieServerRegistry registry) {
         this.context = registry;
 
-        customMetrics = new PrometheusCustomMetricsSupport();
+        customMetrics = new PrometheusCustomMetricsSupport(this);
         registerDefaultDescriptor();
 
         //Prometheus Monitoring
@@ -157,42 +157,15 @@ public class PrometheusKieServerExtension implements KieServerExtension {
     }
 
     public List<DMNRuntimeEventListener> getDMNRuntimeListeners(KieContainerInstance kContainer) {
-        PrometheusMetricsDMNListener defaultListener = new PrometheusMetricsDMNListener(getMetrics(), kContainer);
-        List<DMNRuntimeEventListener> metrics = customMetrics.getDMNRuntimeEventListener(kContainer);
-        if (!metrics.isEmpty()) {
-            List<DMNRuntimeEventListener> listeners = new ArrayList<>(metrics);
-            listeners.add(defaultListener);
-            return listeners;
-        } else {
-            return Collections.singletonList(defaultListener);
-        }
+        return customMetrics.getDMNRuntimeEventListener(kContainer);
     }
 
     public List<AgendaEventListener> getDroolsListeners(String kieSessionId, KieContainerInstance kieContainer) {
-        PrometheusMetricsDroolsListener defaultListener = new PrometheusMetricsDroolsListener(getMetrics(),
-                                                                                              kieSessionId,
-                                                                                              kieContainer);
-        List<AgendaEventListener> metrics = customMetrics.getAgendaEventListener(kieSessionId, kieContainer);
-        if (!metrics.isEmpty()) {
-            List<AgendaEventListener> listeners = new ArrayList<>(metrics);
-            listeners.add(defaultListener);
-            return listeners;
-        } else {
-            return Collections.singletonList(defaultListener);
-        }
+        return customMetrics.getAgendaEventListener(kieSessionId, kieContainer);
     }
 
     public List<PhaseLifecycleListener> getOptaPlannerListeners(String solverId) {
-        PrometheusMetricsSolverListener defaultListener = new PrometheusMetricsSolverListener(solverId);
-
-        List<PhaseLifecycleListener> metrics = customMetrics.getPhaseLifecycleListener(solverId);
-        if (!metrics.isEmpty()) {
-            List<PhaseLifecycleListener> listeners = new ArrayList<>(metrics);
-            listeners.add(defaultListener);
-            return listeners;
-        } else {
-            return Collections.singletonList(defaultListener);
-        }
+        return customMetrics.getPhaseLifecycleListener(solverId);
     }
 
     protected void registerDefaultDescriptor() {

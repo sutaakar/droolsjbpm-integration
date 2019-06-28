@@ -513,6 +513,7 @@ public class SolverServiceBase {
     private void registerListener(Solver solver, String solverId) {
         PrometheusKieServerExtension extension = (PrometheusKieServerExtension)context.getServerExtension(PrometheusKieServerExtension.EXTENSION_NAME);
         if (extension != null) {
+            // no need to check double listener registration as we call registerListener on solver create
             extension.getOptaPlannerListeners(solverId).forEach(l -> ((AbstractSolver) solver).addPhaseLifecycleListener(l));
         }
     }

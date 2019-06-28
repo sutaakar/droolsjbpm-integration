@@ -27,6 +27,7 @@ import org.kie.dmn.api.core.DMNRuntime;
 import org.kie.dmn.api.core.ast.DecisionNode;
 import org.kie.dmn.api.core.ast.DecisionServiceNode;
 import org.kie.dmn.api.core.ast.InputDataNode;
+import org.kie.dmn.api.core.event.DMNRuntimeEventListener;
 import org.kie.dmn.core.ast.InputDataNodeImpl;
 import org.kie.dmn.core.ast.ItemDefNodeImpl;
 import org.kie.dmn.core.internal.utils.DMNEvaluationUtils;
@@ -161,7 +162,11 @@ public class ModelEvaluatorServiceBase {
 
             PrometheusKieServerExtension extension = (PrometheusKieServerExtension)context.getServerExtension(PrometheusKieServerExtension.EXTENSION_NAME);
             if (extension != null) {
-                extension.getDMNRuntimeListeners(kContainer).forEach(l -> dmnRuntime.addListener(l));
+                List<DMNRuntimeEventListener> listeners = extension.getDMNRuntimeListeners(kContainer);
+                boolean listenersAlreadyAdded = dmnRuntime.getListeners().containsAll(listeners);
+                if (!listenersAlreadyAdded) {
+                    listeners.forEach(l -> dmnRuntime.addListener(l));
+                }
             }
 
             LOG.debug("Will deserialize payload: {}", contextPayload);

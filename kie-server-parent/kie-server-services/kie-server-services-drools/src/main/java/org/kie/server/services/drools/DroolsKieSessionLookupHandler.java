@@ -15,8 +15,11 @@
 
 package org.kie.server.services.drools;
 
+import java.util.List;
+
 import org.drools.compiler.kie.builder.impl.KieContainerImpl;
 import org.kie.api.builder.model.KieSessionModel;
+import org.kie.api.event.rule.AgendaEventListener;
 import org.kie.api.event.rule.RuleRuntimeEventManager;
 import org.kie.api.runtime.CommandExecutor;
 import org.kie.server.services.api.KieContainerInstance;
@@ -45,8 +48,12 @@ public class DroolsKieSessionLookupHandler implements KieSessionLookupHandler {
 
             PrometheusKieServerExtension extension = (PrometheusKieServerExtension)registry.getServerExtension(PrometheusKieServerExtension.EXTENSION_NAME);
             if (extension != null && ks != null) {
-                RuleRuntimeEventManager eventManager = (RuleRuntimeEventManager)ks;
-                extension.getDroolsListeners(kieSessionId, containerInstance).forEach(l -> eventManager.addEventListener(l));
+                RuleRuntimeEventManager eventManager = (RuleRuntimeEventManager) ks;
+                List<AgendaEventListener> droolsListeners = extension.getDroolsListeners(kieSessionId, containerInstance);
+                boolean listenersAlreadyRegistered = eventManager.getAgendaEventListeners().containsAll(droolsListeners);
+                if (!listenersAlreadyRegistered) {
+                    droolsListeners.forEach(l -> eventManager.addEventListener(l));
+                }
             }
             return ks;
         }

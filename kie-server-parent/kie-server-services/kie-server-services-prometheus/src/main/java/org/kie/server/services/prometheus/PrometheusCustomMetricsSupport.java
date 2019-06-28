@@ -18,8 +18,10 @@ class PrometheusCustomMetricsSupport {
     private final Map<Class, List<?>> customMetricsInstances;
 
     private ServiceLoader<PrometheusMetricsProvider> loader;
+    private PrometheusKieServerExtension extension;
 
-    PrometheusCustomMetricsSupport() {
+    PrometheusCustomMetricsSupport(PrometheusKieServerExtension extension) {
+        this.extension = extension;
         loader = ServiceLoader.load(PrometheusMetricsProvider.class);
         customMetricsInstances = new ConcurrentHashMap<>();
     }
@@ -36,28 +38,39 @@ class PrometheusCustomMetricsSupport {
 
     List<DMNRuntimeEventListener> getDMNRuntimeEventListener(KieContainerInstance kContainer) {
         if (!customMetricsInstances.containsKey(DMNRuntimeEventListener.class)) {
-            List<DMNRuntimeEventListener> customMetricsTargets = new ArrayList<>();
+            List<DMNRuntimeEventListener> dmnRuntimeEventListeners = new ArrayList<>();
+
+            //add default listener
+            dmnRuntimeEventListeners.add(new PrometheusMetricsDMNListener(extension.getMetrics(), kContainer));
+
+            //and customer listeners, if any
             loader.forEach(p -> {
                 DMNRuntimeEventListener l = p.createDMNRuntimeEventListener(kContainer);
                 if (l != null) {
-                    customMetricsTargets.add(l);
+                    dmnRuntimeEventListeners.add(l);
                 }
             });
-            customMetricsInstances.put(DMNRuntimeEventListener.class, customMetricsTargets);
+            customMetricsInstances.put(DMNRuntimeEventListener.class, dmnRuntimeEventListeners);
         }
         return (List<DMNRuntimeEventListener>) customMetricsInstances.get(DMNRuntimeEventListener.class);
     }
 
     List<AgendaEventListener> getAgendaEventListener(String kieSessionId, KieContainerInstance kContainer) {
         if (!customMetricsInstances.containsKey(AgendaEventListener.class)) {
-            List<AgendaEventListener> customMetricsTargets = new ArrayList<>();
+            List<AgendaEventListener> agendaEventListeners = new ArrayList<>();
+
+            // add default listener
+            agendaEventListeners.add(new PrometheusMetricsDroolsListener(extension.getMetrics(),
+                                                                         kieSessionId,
+                                                                         kContainer));
+            // and customs listeners, if any
             loader.forEach(p -> {
                 AgendaEventListener l = p.createAgendaEventListener(kieSessionId, kContainer);
                 if (l != null) {
-                    customMetricsTargets.add(l);
+                    agendaEventListeners.add(l);
                 }
             });
-            customMetricsInstances.put(AgendaEventListener.class, customMetricsTargets);
+            customMetricsInstances.put(AgendaEventListener.class, agendaEventListeners);
         }
         return (List<AgendaEventListener>) customMetricsInstances.get(AgendaEventListener.class);
     }
@@ -65,6 +78,11 @@ class PrometheusCustomMetricsSupport {
     List<PhaseLifecycleListener> getPhaseLifecycleListener(String solverId) {
         if (!customMetricsInstances.containsKey(PhaseLifecycleListener.class)) {
             List<PhaseLifecycleListener> customMetricsTargets = new ArrayList<>();
+
+            // add default listener first
+            customMetricsTargets.add(new PrometheusMetricsSolverListener(solverId));
+
+            //and then custom, if any
             loader.forEach(p -> {
                 PhaseLifecycleListener l = p.createPhaseLifecycleListener(solverId);
                 if (l != null) {
