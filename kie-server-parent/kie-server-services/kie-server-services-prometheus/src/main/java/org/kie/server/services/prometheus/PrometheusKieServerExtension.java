@@ -100,28 +100,23 @@ public class PrometheusKieServerExtension implements KieServerExtension {
 
             final KModuleDeploymentService deploymentService = jBPMExtension.getAppComponents(KModuleDeploymentService.class);
             if (deploymentService != null) {
-                PrometheusDeploymentEventListener defaultListener = new PrometheusDeploymentEventListener();
                 List<DeploymentEventListener> metrics = customMetrics.getDeploymentEventListener();
                 if (!metrics.isEmpty()) {
                     List<DeploymentEventListener> listeners = new ArrayList<>(metrics);
-                    listeners.add(defaultListener);
                     listeners.forEach(l -> deploymentService.addListener(l));
-                } else {
-                    deploymentService.addListener(defaultListener);
                 }
+                deploymentService.addListener(new PrometheusDeploymentEventListener());
+
             }
 
             final ExecutorServiceImpl executorService = jBPMExtension.getAppComponents(ExecutorServiceImpl.class);
             if (executorService != null) {
-                PrometheusJobListener defaultListener = new PrometheusJobListener();
                 List<AsynchronousJobListener> metrics = customMetrics.getAsynchronousJobListener();
                 if (!metrics.isEmpty()) {
                     List<AsynchronousJobListener> listeners = new ArrayList<>(metrics);
-                    listeners.add(defaultListener);
                     listeners.forEach(l -> executorService.addAsyncJobListener(l));
-                } else {
-                    executorService.addAsyncJobListener(defaultListener);
                 }
+                executorService.addAsyncJobListener(new PrometheusJobListener());
             }
 
             final QueryServiceImpl queryService = jBPMExtension.getAppComponents(QueryServiceImpl.class);
@@ -155,7 +150,8 @@ public class PrometheusKieServerExtension implements KieServerExtension {
         if (!customMetrics.hasCustomMetrics()) {
             LOGGER.info("{} started", toString());
         } else {
-            LOGGER.info( toString() + " started with custom Prometheus metrics provider(s): " + customMetrics.customMetricsProviders());
+            LOGGER.info("{} started with custom Prometheus metrics provider(s): {}",
+                        toString(), customMetrics.customMetricsProviders());
         }
 
     }

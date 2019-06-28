@@ -15,11 +15,8 @@
 
 package org.kie.server.services.drools;
 
-import java.util.List;
-
 import org.drools.compiler.kie.builder.impl.KieContainerImpl;
 import org.kie.api.builder.model.KieSessionModel;
-import org.kie.api.event.rule.AgendaEventListener;
 import org.kie.api.event.rule.RuleRuntimeEventManager;
 import org.kie.api.runtime.CommandExecutor;
 import org.kie.server.services.api.KieContainerInstance;

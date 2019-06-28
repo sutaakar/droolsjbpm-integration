@@ -1,0 +1,134 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.kie.server</groupId>
+    <artifactId>kie-server-tests</artifactId>
+    <version>7.24.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>kie-server-integ-tests-custom-prometheus</artifactId>
+  <packaging>jar</packaging>
+
+  <name>KIE :: Execution Server :: Tests :: Custom extension :: Prometheus</name>
+  <description>KIE Custom Extension Prometheus</description>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.kie</groupId>
+      <artifactId>kie-api</artifactId>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/io.prometheus/simpleclient -->
+    <dependency>
+      <groupId>io.prometheus</groupId>
+      <artifactId>simpleclient</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jbpm</groupId>
+      <artifactId>jbpm-services-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jbpm</groupId>
+      <artifactId>jbpm-executor</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.optaplanner</groupId>
+      <artifactId>optaplanner-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.server</groupId>
+      <artifactId>kie-server-services-drools</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.server</groupId>
+      <artifactId>kie-server-services-prometheus</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.server</groupId>
+      <artifactId>kie-server-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.server</groupId>
+      <artifactId>kie-server-services-common</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie</groupId>
+      <artifactId>kie-dmn-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie</groupId>
+      <artifactId>kie-dmn-core</artifactId>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>prepare-kie-server</id>
+              <phase>pre-integration-test</phase>
+              <configuration>
+                <target>
+                  <unzip src="${maven.dependency.org.kie.server.kie-server.ee7.war.path}" dest="${project.build.directory}/unzipped-kie-server"/>
+                  <copy file="${maven.dependency.org.kie.server.kie-server-integ-custom-prometheus.jar.path}" todir="${project.build.directory}/unzipped-kie-server/WEB-INF/lib"/>
+                  <zip destfile="${project.build.directory}/kie-server.war" basedir="${project.build.directory}/unzipped-kie-server"/>
+                </target>
+              </configuration>
+              <goals>
+                <goal>run</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>tomcat9</id>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-antrun-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>prepare-kie-server</id>
+                  <phase>pre-integration-test</phase>
+                  <configuration>
+                    <target>
+                      <unzip src="${maven.dependency.org.kie.server.kie-server.webc.war.path}" dest="${project.build.directory}/unzipped-kie-server"/>
+                      <copy file="${maven.dependency.org.kie.server.kie-server-integ-tests-custom-prometheus.jar.path}" todir="${project.build.directory}/unzipped-kie-server/WEB-INF/lib"/>
+                      <zip destfile="${project.build.directory}/kie-server.war" basedir="${project.build.directory}/unzipped-kie-server"/>
+                    </target>
+                  </configuration>
+                  <goals>
+                    <goal>run</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
+</project>

@@ -84,7 +84,8 @@
     <module>kie-server-integ-tests-router</module>
     <module>kie-server-integ-tests-case-id-generator</module>
     <module>kie-server-integ-tests-dmn</module>
-    <module>kie-server-integ-tests-custom-extension</module>    
+    <module>kie-server-integ-tests-custom-extension</module>
+    <module>kie-server-integ-tests-custom-prometheus</module>
   </modules>
 
   <dependencyManagement>
