@@ -35,6 +35,12 @@
     </dependency>
     <dependency>
       <groupId>org.kie.server</groupId>
+      <artifactId>kie-server-integ-tests-custom-extension-prometheus</artifactId>
+      <version>7.24.0-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kie.server</groupId>
       <artifactId>kie-server-integ-tests-custom-extension-client</artifactId>
       <scope>test</scope>
     </dependency>
@@ -101,6 +107,7 @@
                 <target>
                   <unzip src="${maven.dependency.org.kie.server.kie-server.ee7.war.path}" dest="${project.build.directory}/unzipped-kie-server"/>
                   <copy file="${maven.dependency.org.kie.server.kie-server-integ-tests-custom-extension-services.jar.path}" todir="${project.build.directory}/unzipped-kie-server/WEB-INF/lib"/>
+                  <copy file="${maven.dependency.org.kie.server.kie-server-integ-tests-custom-extension-prometheus.jar.path}" todir="${project.build.directory}/unzipped-kie-server/WEB-INF/lib"/>
                   <copy file="${maven.dependency.org.kie.server.kie-server-integ-tests-custom-extension-rest.jar.path}" todir="${project.build.directory}/unzipped-kie-server/WEB-INF/lib"/>
                   <zip destfile="${project.build.directory}/kie-server.war" basedir="${project.build.directory}/unzipped-kie-server"/>
                 </target>
@@ -190,6 +197,7 @@
                     <target>
                       <unzip src="${maven.dependency.org.kie.server.kie-server.webc.war.path}" dest="${project.build.directory}/unzipped-kie-server"/>
                       <copy file="${maven.dependency.org.kie.server.kie-server-integ-tests-custom-extension-services.jar.path}" todir="${project.build.directory}/unzipped-kie-server/WEB-INF/lib"/>
+                      <copy file="${maven.dependency.org.kie.server.kie-server-integ-tests-custom-extension-prometheus.jar.path}" todir="${project.build.directory}/unzipped-kie-server/WEB-INF/lib"/>
                       <copy file="${maven.dependency.org.kie.server.kie-server-integ-tests-custom-extension-rest.jar.path}" todir="${project.build.directory}/unzipped-kie-server/WEB-INF/lib"/>
                       <zip destfile="${project.build.directory}/kie-server.war" basedir="${project.build.directory}/unzipped-kie-server"/>
                     </target>
