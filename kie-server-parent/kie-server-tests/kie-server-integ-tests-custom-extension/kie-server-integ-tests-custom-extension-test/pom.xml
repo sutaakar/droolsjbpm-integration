@@ -17,6 +17,16 @@
     <org.drools.server.ext.disabled>false</org.drools.server.ext.disabled>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.kie.server</groupId>
+        <artifactId>kie-server-integ-tests-custom-extension-prometheus</artifactId>
+        <version>7.24.0-SNAPSHOT</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.kie.server</groupId>
@@ -36,7 +46,6 @@
     <dependency>
       <groupId>org.kie.server</groupId>
       <artifactId>kie-server-integ-tests-custom-extension-prometheus</artifactId>
-      <version>7.24.0-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>
